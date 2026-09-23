@@ -1,2 +1,4 @@
+.history/
+tarefas.json
 __pycache__/
 *.pyc
