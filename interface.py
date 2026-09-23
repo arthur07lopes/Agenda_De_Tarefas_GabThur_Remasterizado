@@ -1,6 +1,7 @@
 import wx
 
 from tarefas import GerenciadorTarefas, PRIORIDADES, STATUS_PENDENTE, STATUS_CONCLUIDA
+from bandeja import BandejaAgendaTarefas
 import persistencia
 
 OPCOES_STATUS = ["Todos", STATUS_PENDENTE, STATUS_CONCLUIDA]
@@ -21,9 +22,11 @@ class AgendaTarefasFrame(wx.Frame):
         self.SetBackgroundColour(wx.Colour(COR_FUNDO))
 
         self.gerenciador = GerenciadorTarefas()
+        self._saida_confirmada = False
 
         self._criar_interface()
         self._configurar_atalhos()
+        self.bandeja = BandejaAgendaTarefas(self)
         self._carregar_tarefas()
 
         self.Centre()
@@ -254,15 +257,22 @@ class AgendaTarefasFrame(wx.Frame):
         self.SetAcceleratorTable(tabela)
 
     def ao_fechar(self, evento):
-        resposta = wx.MessageBox(
-            "Deseja realmente sair do programa?",
-            "Confirmar saída",
-            wx.YES_NO | wx.ICON_QUESTION,
-        )
-        if resposta == wx.YES or not evento.CanVeto():
+        if self._saida_confirmada or not evento.CanVeto():
+            self.bandeja.RemoveIcon()
+            self.bandeja.Destroy()
             self.Destroy()
-        else:
-            evento.Veto()
+            return
+
+        evento.Veto()
+        self.Hide()
+        self.SetStatusText(
+            "A Agenda de Tarefas GabThur continua em segundo plano. "
+            "Use o ícone na bandeja para reabrir ou sair."
+        )
+
+    def sair_definitivamente(self):
+        self._saida_confirmada = True
+        self.Close()
 
     def ao_adicionar(self, evento):
         try:
@@ -402,6 +412,7 @@ class AgendaTarefasFrame(wx.Frame):
                 self.lista.Select(indice)
                 self._mostrar_botoes(tarefa)
         self.Layout()
+        self.bandeja.atualizar()
 
     def _carregar_tarefas(self):
         tarefas_salvas = persistencia.carregar()
