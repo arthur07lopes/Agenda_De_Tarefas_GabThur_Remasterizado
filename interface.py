@@ -271,8 +271,14 @@ class AgendaTarefasFrame(wx.Frame):
         )
 
     def sair_definitivamente(self):
-        self._saida_confirmada = True
-        self.Close()
+        resposta = wx.MessageBox(
+            "Deseja realmente sair da Agenda de Tarefas GabThur?",
+            "Confirmar saída",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        if resposta == wx.YES:
+            self._saida_confirmada = True
+            self.Close()
 
     def ao_adicionar(self, evento):
         try:
